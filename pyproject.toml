@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "wss-consulting-test"
+version = "0.1.0"
+description = "Сервис для обработки заявок пользователей"
+authors = ["justatrade, <justatrade@mail.ru>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.11"
+uvicorn = {extras = ["standard"], version = "^0.34.0"}
+sqlalchemy = "^2.0.29"
+psycopg2-binary = "^2.9.9"
+alembic = "^1.13.1"
+pydantic = "^2.6.4"
+pyjwt = "^2.8.0"
+passlib = "^1.7.4"
+python-multipart = "^0.0.20"
+email-validator = "^2.1.0.post1"
+aiosmtplib = "^4.0.0"
+pydantic-settings = "^2.2.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.3.7"
+mypy = "^1.8.0"
+pre-commit = "^3.6.0"
