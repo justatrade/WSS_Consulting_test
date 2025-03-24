@@ -19,7 +19,11 @@ from app.schemas.ticket import TicketCreate, TicketInDB, TicketUpdate
 router = APIRouter()
 
 
-@router.post("/", response_model=TicketInDB)
+@router.post(
+    "/",
+    response_model=TicketInDB,
+    response_description="Созданная заявка.",
+)
 def create_new_ticket(
     ticket: TicketCreate,
     db: Session = Depends(get_db),
@@ -27,15 +31,15 @@ def create_new_ticket(
 ) -> TicketInDB:
     """
     Создаёт новую заявку.
-    :param ticket: Данные для создания заявки.
-    :param db: Сессия базы данных.
-    :param current_user: Текущий пользователь.
-    :return: :class:`TicketInDB` Созданная заявка.
     """
     return create_ticket(db=db, ticket=ticket, owner_id=current_user.id)
 
 
-@router.get("/", response_model=Dict[str, Union[List[TicketInDB], int]])
+@router.get(
+    "/",
+    response_model=Dict[str, Union[List[TicketInDB], int]],
+    response_description="Словарь с заявками и метаданными пагинации.",
+)
 def read_tickets(
     skip: int = Query(0, description="Сколько записей пропустить"),
     limit: int = Query(100, description="Лимит записей на странице"),
@@ -48,13 +52,6 @@ def read_tickets(
 ) -> Dict[str, Union[List[TicketInDB], int]]:
     """
     Возвращает список заявок с пагинацией и сортировкой.
-    :param skip: Количество пропускаемых записей.
-    :param limit: Лимит записей на странице.
-    :param sort_by: Поле для сортировки (created_at или title).
-    :param order: Порядок сортировки (asc или desc).
-    :param db: Сессия базы данных.
-    :param current_user: Текущий пользователь.
-    :return: Словарь с заявками и метаданными пагинации.
     """
     tickets = get_tickets(
         db=db,
@@ -65,18 +62,19 @@ def read_tickets(
         order=order,
     )
     total = (
-        db.query(Ticket).filter(Ticket.owner_id == current_user.id).count()
-    )  # type:ignore
+        db.query(Ticket).filter(Ticket.owner_id == current_user.id).count()  # type: ignore
+    )
     return {"tickets": tickets, "total": total, "skip": skip, "limit": limit}
 
 
-@router.get("/{ticket_id}", response_model=TicketInDB)
+@router.get(
+    "/{ticket_id}",
+    response_model=TicketInDB,
+    response_description="Объект заявки.",
+)
 def read_ticket(ticket_id: int, db: Session = Depends(get_db)) -> TicketInDB:
     """
     Получает заявку по её ID.
-    :param ticket_id: ID заявки.
-    :param db: Сессия базы данных.
-    :return: :class:`TicketInDB` Объект заявки.
     """
     db_ticket = get_ticket(db, ticket_id=ticket_id)
     if not db_ticket:
@@ -84,7 +82,11 @@ def read_ticket(ticket_id: int, db: Session = Depends(get_db)) -> TicketInDB:
     return db_ticket
 
 
-@router.put("/{ticket_id}", response_model=TicketInDB)
+@router.put(
+    "/{ticket_id}",
+    response_model=TicketInDB,
+    response_description="Обновлённая заявка.",
+)
 def update_existing_ticket(
     ticket_id: int,
     ticket: TicketUpdate,
@@ -93,11 +95,6 @@ def update_existing_ticket(
 ) -> TicketInDB:
     """
     Обновляет данные заявки.
-    :param ticket_id: ID заявки.
-    :param ticket: Данные для обновления заявки.
-    :param db: Сессия базы данных.
-    :param current_user: Текущий пользователь.
-    :return: :class:`TicketInDB` Обновлённая заявка.
     """
     db_ticket = get_ticket(db, ticket_id=ticket_id)
     if not db_ticket:
@@ -107,7 +104,11 @@ def update_existing_ticket(
     return update_ticket(db=db, ticket_id=ticket_id, ticket=ticket)
 
 
-@router.patch("/tickets/{ticket_id}/close", response_model=TicketInDB)
+@router.patch(
+    "/tickets/{ticket_id}/close",
+    response_model=TicketInDB,
+    response_description="Закрытая заявка.",
+)
 def close_ticket(
     ticket_id: int,
     db: Session = Depends(get_db),
@@ -115,10 +116,6 @@ def close_ticket(
 ) -> TicketInDB:
     """
     Закрывает заявку.
-    :param ticket_id: ID заявки.
-    :param db: Сессия базы данных.
-    :param current_user: Текущий пользователь.
-    :return: :class:`TicketInDB` Закрытая заявка.
     """
     db_ticket = get_ticket(db, ticket_id=ticket_id)
     if not db_ticket:
@@ -130,7 +127,11 @@ def close_ticket(
     )
 
 
-@router.delete("/{ticket_id}", response_model=TicketInDB)
+@router.delete(
+    "/{ticket_id}",
+    response_model=TicketInDB,
+    response_description="Удалённая заявка.",
+)
 def delete_existing_ticket(
     ticket_id: int,
     db: Session = Depends(get_db),
@@ -138,10 +139,6 @@ def delete_existing_ticket(
 ) -> TicketInDB:
     """
     Удаляет заявку по её ID.
-    :param ticket_id: ID заявки.
-    :param db: Сессия базы данных.
-    :param current_user: Текущий пользователь.
-    :return: :class:`TicketInDB` Удалённая заявка.
     """
     db_ticket = get_ticket(db, ticket_id=ticket_id)
     if not db_ticket:

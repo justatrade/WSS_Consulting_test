@@ -15,13 +15,16 @@ from app.services.email import send_email
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserInDB)
-async def register(user: UserCreate, db: Session = Depends(get_db)) -> UserInDB:
+@router.post(
+    "/register",
+    response_model=UserInDB,
+    response_description="Зарегистрированный пользователь.",
+)
+async def register(
+    user: UserCreate, db: Session = Depends(get_db)
+) -> UserInDB:
     """
     Регистрирует нового пользователя и отправляет код подтверждения на email.
-    :param user: Данные для регистрации пользователя.
-    :param db: Сессия базы данных.
-    :return: :class:`UserInDB` Зарегистрированный пользователь.
     """
     db_user = get_user_by_email(db, email=user.email)
     if db_user:
@@ -36,11 +39,15 @@ async def register(user: UserCreate, db: Session = Depends(get_db)) -> UserInDB:
     return user_created
 
 
-@router.get("/users/me", response_model=UserInDB)
-async def read_users_me(current_user: User = Depends(get_current_user)) -> UserInDB:
+@router.get(
+    "/users/me",
+    response_model=UserInDB,
+    response_description="Объект текущего пользователя.",
+)
+async def read_users_me(
+    current_user: User = Depends(get_current_user),
+) -> UserInDB:
     """
     Возвращает информацию о текущем пользователе.
-    :param current_user: Текущий пользователь, полученный из токена.
-    :return: :class:`UserInDB` Объект текущего пользователя.
     """
     return current_user

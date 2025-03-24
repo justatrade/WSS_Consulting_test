@@ -16,16 +16,15 @@ from app.services.email import send_email
 router = APIRouter()
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    response_description="Сообщение об успешной отправке кода.",
+)
 async def login(
     email: EmailStr, password: str, db: Session = Depends(get_db)
 ) -> dict[str, str]:
     """
     Проверяет пароль и отправляет код подтверждения для входа на email пользователя.
-    :param email: Email пользователя.
-    :param password: Пароль пользователя.
-    :param db: Сессия базы данных.
-    :return: Сообщение об успешной отправке кода.
     """
     db_user = get_user_by_email(db, email=email)
     if not db_user:
@@ -39,20 +38,21 @@ async def login(
             detail="Access denied",
         )
     code = generate_confirmation_code(db, email=email)
-    await send_email(to=email, subject="Login code", body=f"Your login code is {code}.")
+    await send_email(
+        to=email, subject="Login code", body=f"Your login code is {code}."
+    )
     return {"message": "Login code sent"}
 
 
-@router.post("/confirm-login")
+@router.post(
+    "/confirm-login",
+    response_description="Access и refresh токены.",
+)
 async def confirm_login(
     email: EmailStr, code: str, db: Session = Depends(get_db)
 ) -> dict[str, str | dict[str, str]]:
     """
     Подтверждает вход по коду и возвращает access и refresh токены.
-    :param email: Email пользователя.
-    :param code: Код подтверждения.
-    :param db: Сессия базы данных.
-    :return: Access и refresh токены.
     """
     db_user = get_user_by_email(db, email=email)
     if not db_user:
@@ -68,7 +68,9 @@ async def confirm_login(
     db_user.confirmation_code = None
     db.commit()
     access_token = create_token(TokenBase(type="access", sub=db_user.email))
-    refreshing_token = create_token(TokenBase(type="refresh", sub=db_user.email))
+    refreshing_token = create_token(
+        TokenBase(type="refresh", sub=db_user.email)
+    )
     return {
         "access_token": access_token,
         "refresh_token": refreshing_token,
@@ -76,16 +78,16 @@ async def confirm_login(
     }
 
 
-@router.post("/refresh-token")
+@router.post(
+    "/refresh-token",
+    response_description="Новый access-токен.",
+)
 async def refresh_token(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_refreshing_user),
 ) -> dict[str, str]:
     """
     Обновляет access-токен с использованием refresh-токена.
-    :param db: Сессия базы данных.
-    :param current_user: Текущий пользователь, полученный из refresh-токена.
-    :return: Новый access-токен.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
