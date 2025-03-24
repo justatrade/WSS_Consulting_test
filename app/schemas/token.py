@@ -1,7 +1,12 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
-class Token(BaseModel):
+class TokenBase(BaseModel):
     type: str
     sub: str
-    exp: str = None
+
+
+class TokenCreate(TokenBase):
+    exp: datetime

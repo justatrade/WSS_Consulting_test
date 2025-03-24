@@ -8,6 +8,10 @@ readme = "README.md"
 package-mode = false
 
 
+[tool.mypy]
+explicit_package_bases = true
+
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -33,3 +37,7 @@ pydantic-settings = "^2.2.1"
 ruff = "^0.3.7"
 mypy = "^1.8.0"
 pre-commit = "^3.6.0"
+flake8 = "^7.1.2"
+isort = "^6.0.1"
+pylint = "^3.3.6"
+black = "^25.1.0"

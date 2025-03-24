@@ -1,8 +1,9 @@
 from fastapi import FastAPI
+
 from app.core.config import settings
-from app.routers.users import router as users_router
-from app.routers.tickets import router as tickets_router
 from app.routers.auth import router as auth_router
+from app.routers.tickets import router as tickets_router
+from app.routers.users import router as users_router
 
 app = FastAPI(
     title=settings.project_name,

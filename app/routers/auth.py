@@ -4,19 +4,29 @@ from sqlalchemy.orm import Session
 
 from app.core.security import (
     create_token,
-    get_current_refreshing_user, verify_password,
+    get_current_refreshing_user,
+    verify_password,
 )
-from app.crud.user import get_user_by_email, generate_confirmation_code
+from app.crud.user import generate_confirmation_code, get_user_by_email
 from app.db.session import get_db
 from app.models.user import User
+from app.schemas.token import TokenBase
 from app.services.email import send_email
-from app.schemas.token import Token
-
 
 router = APIRouter()
 
+
 @router.post("/login")
-async def login(email: EmailStr, password: str, db: Session = Depends(get_db)):
+async def login(
+    email: EmailStr, password: str, db: Session = Depends(get_db)
+) -> dict[str, str]:
+    """
+    Проверяет пароль и отправляет код подтверждения для входа на email пользователя.
+    :param email: Email пользователя.
+    :param password: Пароль пользователя.
+    :param db: Сессия базы данных.
+    :return: Сообщение об успешной отправке кода.
+    """
     db_user = get_user_by_email(db, email=email)
     if not db_user:
         raise HTTPException(
@@ -29,17 +39,21 @@ async def login(email: EmailStr, password: str, db: Session = Depends(get_db)):
             detail="Access denied",
         )
     code = generate_confirmation_code(db, email=email)
-    await send_email(
-        to=email,
-        subject="Login code",
-        body=f"Your login code is {code}."
-    )
+    await send_email(to=email, subject="Login code", body=f"Your login code is {code}.")
     return {"message": "Login code sent"}
+
 
 @router.post("/confirm-login")
 async def confirm_login(
-        email: EmailStr, code: str, db: Session = Depends(get_db)
-):
+    email: EmailStr, code: str, db: Session = Depends(get_db)
+) -> dict[str, str | dict[str, str]]:
+    """
+    Подтверждает вход по коду и возвращает access и refresh токены.
+    :param email: Email пользователя.
+    :param code: Код подтверждения.
+    :param db: Сессия базы данных.
+    :return: Access и refresh токены.
+    """
     db_user = get_user_by_email(db, email=email)
     if not db_user:
         raise HTTPException(
@@ -53,19 +67,26 @@ async def confirm_login(
         )
     db_user.confirmation_code = None
     db.commit()
-    access_token = create_token(Token(type="access", sub=db_user.email))
-    refreshing_token = create_token(Token(type="refresh", sub=db_user.email))
+    access_token = create_token(TokenBase(type="access", sub=db_user.email))
+    refreshing_token = create_token(TokenBase(type="refresh", sub=db_user.email))
     return {
         "access_token": access_token,
         "refresh_token": refreshing_token,
         "token_type": "bearer",
     }
 
+
 @router.post("/refresh-token")
 async def refresh_token(
-        db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_refreshing_user)
-):
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_refreshing_user),
+) -> dict[str, str]:
+    """
+    Обновляет access-токен с использованием refresh-токена.
+    :param db: Сессия базы данных.
+    :param current_user: Текущий пользователь, полученный из refresh-токена.
+    :return: Новый access-токен.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -75,5 +96,5 @@ async def refresh_token(
     if user is None:
         raise credentials_exception
 
-    access_token = create_token(Token(type="access", sub=user.email))
+    access_token = create_token(TokenBase(type="access", sub=user.email))
     return {"access_token": access_token, "token_type": "bearer"}

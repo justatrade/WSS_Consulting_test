@@ -1,0 +1,17 @@
+[MASTER]
+init-hook =
+    import os, sys, subprocess, sysconfig;
+    venv_path = subprocess.run(["poetry", "env", "info", "--path"], capture_output=True, text=True).stdout.strip();
+    site_packages = sysconfig.get_path("purelib", vars={"base": venv_path});
+    sys.path.append(site_packages);
+    project_root = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True).stdout.strip();
+    sys.path.append(project_root);
+ignore-paths = ^migrations/versions/
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    too-few-public-methods,
+    missing-class-docstring,
+    raise-missing-from,
+    too-many-arguments
